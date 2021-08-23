@@ -36,13 +36,16 @@ def _get_http_response_with_retries(
     """
     Performs an HTTP request using Python's `requests` module with an automatic retry policy.
 
-    :method: a string indicating the method to use, e.g. "GET", "POST", "PUT".
-    :url: the target URL address for the HTTP request.
+    :param method: a string indicating the method to use, e.g. "GET", "POST", "PUT".
+    :param url: the target URL address for the HTTP request.
     :param max_retries: Maximum total number of retries.
-    :backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP request
-      will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the exp-backoff.
-    :retry_codes: a list of HTTP response error codes that qualifies for retry.
-    :kwargs: Keyword arguments to pass to `requests.Session.request()`
+    :param backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP
+      request will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the
+      exponential backoff.
+    :param retry_codes: a list of HTTP response error codes that qualifies for retry.
+    :param kwargs: Keyword arguments to pass to `requests.Session.request()`
+
+    :return requests.Response object.
     """
     assert 0 <= max_retries < 10
     assert 0 <= backoff_factor < 120
@@ -79,16 +82,19 @@ def http_request(
     retried with an exponential back off with backoff_factor * (1, 2, 4, ... seconds).
     The function parses the API response (assumed to be JSON) into a Python object and returns it.
 
-    :host_creds: A :py:class:`mlflow.rest_utils.MlflowHostCreds` object containing
+    :param host_creds: A :py:class:`mlflow.rest_utils.MlflowHostCreds` object containing
         hostname and optional authentication.
-    :endpoint: a string for service endpoint, e.g. "/path/to/object".
-    :method: a string indicating the method to use, e.g. "GET", "POST", "PUT".
-    :max_retries: maximum number of retries before throwing an exception.
-    :backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP request
-      will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the exp-backoff.
-    :retry_codes: a list of HTTP response error codes that qualifies for retry.
-    :timeout: wait for timeout seconds for response from remote server for connect and read request.
-    :return: Parsed API response
+    :param endpoint: a string for service endpoint, e.g. "/path/to/object".
+    :param method: a string indicating the method to use, e.g. "GET", "POST", "PUT".
+    :param max_retries: maximum number of retries before throwing an exception.
+    :param backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP
+      request will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the
+      exponential backoff.
+    :param retry_codes: a list of HTTP response error codes that qualifies for retry.
+    :param timeout: wait for timeout seconds for response from remote server for connect and
+      read request.
+
+    :return requests.Response object.
     """
     hostname = host_creds.host
     auth_str = None
@@ -215,16 +221,20 @@ def cloud_storage_http_request(
     **kwargs
 ):
     """
-    Performs an HTTP PUT/GET request using Python's `requests` module with an automatic retry.
+    Performs an HTTP PUT/GET request using Python's `requests` module with automatic retry.
 
-    :method: string of 'PUT' or 'GET', specify to do http PUT or GET
-    :args: Positional arguments to pass to `requests.Session.put/get()`
-    :max_retries: maximum number of retries before throwing an exception.
-    :backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP request
-      will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the exp-backoff.
-    :retry_codes: a list of HTTP response error codes that qualifies for retry.
-    :timeout: wait for timeout seconds for response from remote server for connect and read request.
-    :kwargs: Keyword arguments to pass to `requests.Session.put/get()`
+    :param method: string of 'PUT' or 'GET', specify to do http PUT or GET
+    :param args: Positional arguments to pass to `requests.Session.request()`
+    :param max_retries: maximum number of retries before throwing an exception.
+    :param backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP
+      request will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the
+      exponential backoff.
+    :param retry_codes: a list of HTTP response error codes that qualifies for retry.
+    :param timeout: wait for timeout seconds for response from remote server for connect and
+      read request.
+    :param kwargs: Keyword arguments to pass to `requests.Session.request()`
+
+    :return requests.Response object.
     """
     if method.lower() not in ("put", "get"):
         raise ValueError("Illegal http method: " + method)
