@@ -43,7 +43,7 @@ def _get_http_response_with_retries(
       request will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the
       exponential backoff.
     :param retry_codes: a list of HTTP response error codes that qualifies for retry.
-    :param kwargs: Keyword arguments to pass to `requests.Session.request()`
+    :param kwargs: Additional keyword arguments to pass to `requests.Session.request()`
 
     :return requests.Response object.
     """
@@ -93,6 +93,7 @@ def http_request(
     :param retry_codes: a list of HTTP response error codes that qualifies for retry.
     :param timeout: wait for timeout seconds for response from remote server for connect and
       read request.
+    :param kwargs: Additional keyword arguments to pass to `requests.Session.request()`
 
     :return requests.Response object.
     """
@@ -122,11 +123,11 @@ def http_request(
     url = "%s%s" % (cleaned_hostname, endpoint)
     try:
         return _get_http_response_with_retries(
-            method=method,
-            url=url,
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-            retry_codes=retry_codes,
+            method,
+            url,
+            max_retries,
+            backoff_factor,
+            retry_codes,
             headers=headers,
             verify=verify,
             timeout=timeout,
@@ -148,7 +149,7 @@ def http_request_safe(host_creds, endpoint, method, **kwargs):
     """
     Wrapper around ``http_request`` that also verifies that the request succeeds with code 200.
     """
-    response = http_request(host_creds=host_creds, endpoint=endpoint, method=method, **kwargs)
+    response = http_request(host_creds, endpoint, method, **kwargs)
     return verify_rest_response(response, endpoint)
 
 
@@ -197,13 +198,9 @@ def call_endpoint(host_creds, endpoint, method, json_body, response_proto):
     if json_body:
         json_body = json.loads(json_body)
     if method == "GET":
-        response = http_request(
-            host_creds=host_creds, endpoint=endpoint, method=method, params=json_body
-        )
+        response = http_request(host_creds, endpoint, method, params=json_body)
     else:
-        response = http_request(
-            host_creds=host_creds, endpoint=endpoint, method=method, json=json_body
-        )
+        response = http_request(host_creds, endpoint, method, json=json_body)
     response = verify_rest_response(response, endpoint)
     js_dict = json.loads(response.text)
     parse_dict(js_dict=js_dict, message=response_proto)
@@ -213,7 +210,7 @@ def call_endpoint(host_creds, endpoint, method, json_body, response_proto):
 @contextmanager
 def cloud_storage_http_request(
     method,
-    *args,
+    url,
     max_retries=5,
     backoff_factor=2,
     retry_codes=_TRANSIENT_FAILURE_RESPONSE_CODES,
@@ -224,7 +221,7 @@ def cloud_storage_http_request(
     Performs an HTTP PUT/GET request using Python's `requests` module with automatic retry.
 
     :param method: string of 'PUT' or 'GET', specify to do http PUT or GET
-    :param args: Positional arguments to pass to `requests.Session.request()`
+    :param url: the target URL address for the HTTP request.
     :param max_retries: maximum number of retries before throwing an exception.
     :param backoff_factor: a time factor for exponential backoff. e.g. value 5 means the HTTP
       request will be retried with interval 5, 10, 20... seconds. A value of 0 turns off the
@@ -232,7 +229,7 @@ def cloud_storage_http_request(
     :param retry_codes: a list of HTTP response error codes that qualifies for retry.
     :param timeout: wait for timeout seconds for response from remote server for connect and
       read request.
-    :param kwargs: Keyword arguments to pass to `requests.Session.request()`
+    :param kwargs: Additional keyword arguments to pass to `requests.Session.request()`
 
     :return requests.Response object.
     """
@@ -240,13 +237,7 @@ def cloud_storage_http_request(
         raise ValueError("Illegal http method: " + method)
     try:
         return _get_http_response_with_retries(
-            method,
-            *args,
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-            retry_codes=retry_codes,
-            timeout=timeout,
-            **kwargs
+            method, url, max_retries, backoff_factor, retry_codes, timeout=timeout, **kwargs
         )
     except Exception as e:
         raise MlflowException("API request failed with exception %s" % e)
