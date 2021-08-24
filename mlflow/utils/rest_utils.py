@@ -56,6 +56,7 @@ def _get_http_response_with_retries(
         redirect=max_retries,
         status=max_retries,
         status_forcelist=retry_codes,
+        allowed_methods=None,  # Allow retry on any HTTP methods.
         backoff_factor=backoff_factor,
     )
     adapter = HTTPAdapter(max_retries=retry)
