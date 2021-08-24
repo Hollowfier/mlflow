@@ -149,7 +149,7 @@ def http_request_safe(host_creds, endpoint, method, **kwargs):
     """
     Wrapper around ``http_request`` that also verifies that the request succeeds with code 200.
     """
-    response = http_request(host_creds, endpoint, method, **kwargs)
+    response = http_request(host_creds=host_creds, endpoint=endpoint, method=method, **kwargs)
     return verify_rest_response(response, endpoint)
 
 
@@ -198,9 +198,13 @@ def call_endpoint(host_creds, endpoint, method, json_body, response_proto):
     if json_body:
         json_body = json.loads(json_body)
     if method == "GET":
-        response = http_request(host_creds, endpoint, method, params=json_body)
+        response = http_request(
+            host_creds=host_creds, endpoint=endpoint, method=method, params=json_body
+        )
     else:
-        response = http_request(host_creds, endpoint, method, json=json_body)
+        response = http_request(
+            host_creds=host_creds, endpoint=endpoint, method=method, json=json_body
+        )
     response = verify_rest_response(response, endpoint)
     js_dict = json.loads(response.text)
     parse_dict(js_dict=js_dict, message=response_proto)
