@@ -240,9 +240,10 @@ def cloud_storage_http_request(
     if method.lower() not in ("put", "get"):
         raise ValueError("Illegal http method: " + method)
     try:
-        return _get_http_response_with_retries(
+        with _get_http_response_with_retries(
             method, url, max_retries, backoff_factor, retry_codes, timeout=timeout, **kwargs
-        )
+        ) as response:
+            yield response
     except Exception as e:
         raise MlflowException("API request failed with exception %s" % e)
 
