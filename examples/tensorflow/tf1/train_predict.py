@@ -20,33 +20,33 @@ parser.add_argument(
 def main(argv):
     with mlflow.start_run():
         args = parser.parse_args(argv[1:])
-
+        tf.compat.v1.disable_eager_execution()
         # Builds, trains and evaluates a tf.estimator. Then, exports it for inference,
         # logs the exported model with MLflow, and loads the fitted model back as a PyFunc.
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.boston_housing.load_data()
+        (x_train, y_train), (x_test, y_test) = tf.compat.v1.keras.datasets.boston_housing.load_data()
 
         # There are 13 features we are using for inference.
-        feat_cols = [tf.feature_column.numeric_column(key="features", shape=(x_train.shape[1],))]
+        feat_cols = [tf.compat.v1.feature_column.numeric_column(key="features", shape=(x_train.shape[1],))]
         feat_spec = {
-            "features": tf.placeholder("float", name="features", shape=[None, x_train.shape[1]])
+            "features": tf.compat.v1.placeholder("float", name="features", shape=[None, x_train.shape[1]])
         }
 
         hidden_units = [50, 20]
         steps = args.steps
 
         regressor = tf.estimator.DNNRegressor(hidden_units=hidden_units, feature_columns=feat_cols)
-        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        train_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             {"features": x_train}, y_train, num_epochs=None, shuffle=True
         )
         regressor.train(train_input_fn, steps=steps)
-        test_input_fn = tf.estimator.inputs.numpy_input_fn(
+        test_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             {"features": x_test}, y_test, num_epochs=None, shuffle=True
         )
         # Compute mean squared error
         mse = regressor.evaluate(test_input_fn, steps=steps)
 
         # Building a receiver function for exporting
-        receiver_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(feat_spec)
+        receiver_fn = tf.compat.v1.estimator.export.build_raw_serving_input_receiver_fn(feat_spec)
         temp = tempfile.mkdtemp()
         try:
             # The model is automatically logged when export_saved_model() is called.
@@ -68,5 +68,5 @@ def main(argv):
 
 if __name__ == "__main__":
     # The Estimator periodically generates "INFO" logs; make these logs visible.
-    tf.logging.set_verbosity(tf.logging.INFO)
-    tf.app.run(main=main)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
+    tf.compat.v1.app.run(main=main)

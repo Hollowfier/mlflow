@@ -98,6 +98,22 @@ def _get_docker_image_uri(repository_uri, work_dir):
     version_string = ":" + git_commit[:7] if git_commit else ""
     return repository_uri + version_string
 
+def onerror(func, path, exc_info):
+    """
+    Error handler for ``shutil.rmtree``.
+    If the error is due to an access error (read only file)
+    it attempts to add write permission and then retries.
+    If the error is for another reason it re-raises the error.
+    Usage : ``shutil.rmtree(path, onerror=onerror)``
+    """
+    import stat
+    if not os.access(path, os.W_OK):
+        # Is the error an access error ?
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+    else:
+        raise
+
 
 def _create_docker_build_ctx(work_dir, dockerfile_contents):
     """
@@ -114,7 +130,7 @@ def _create_docker_build_ctx(work_dir, dockerfile_contents):
             output_filename=result_path, source_dir=dst_path, archive_name=_PROJECT_TAR_ARCHIVE_NAME
         )
     finally:
-        shutil.rmtree(directory)
+        shutil.rmtree(directory, onerror=onerror)
     return result_path
 
 

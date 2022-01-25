@@ -2,6 +2,7 @@
 # P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 # Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
 
+from functools import lru_cache
 import os
 import warnings
 import sys
@@ -12,8 +13,11 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import ElasticNet
 from urllib.parse import urlparse
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
 import mlflow
 import mlflow.sklearn
+import mlflow.onnx
 
 import logging
 
@@ -59,6 +63,12 @@ if __name__ == "__main__":
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
         lr.fit(train_x, train_y)
 
+        # Number of features have to be added explicitly to the model while converting it to ONNX framework 
+        initial_type = [('float_input', FloatTensorType([None, 11]))]
+        model_onnx = convert_sklearn(lr, initial_types=initial_type)
+        with open("model.onnx", "wb") as f:
+            f.write(model_onnx.SerializeToString())
+
         predicted_qualities = lr.predict(test_x)
 
         (rmse, mae, r2) = eval_metrics(test_y, predicted_qualities)
@@ -83,6 +93,8 @@ if __name__ == "__main__":
             # There are other ways to use the Model Registry, which depends on the use case,
             # please refer to the doc for more information:
             # https://mlflow.org/docs/latest/model-registry.html#api-workflow
+            mlflow.onnx.log_model(model_onnx, "model_onnx", registered_model_name="ElasticnetWineModelONNX")
             mlflow.sklearn.log_model(lr, "model", registered_model_name="ElasticnetWineModel")
         else:
             mlflow.sklearn.log_model(lr, "model")
+            mlflow.onnx.log_model(model_onnx, "model_onnx")
