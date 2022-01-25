@@ -1,0 +1,15 @@
+tf2onnx1.10.0:§
+»
+dense_input
+@StatefulPartitionedCall/sequential/dense/MatMul/ReadVariableOp:01StatefulPartitionedCall/sequential/dense/MatMul:0/StatefulPartitionedCall/sequential/dense/MatMul"MatMul
+´
+1StatefulPartitionedCall/sequential/dense/MatMul:0
+AStatefulPartitionedCall/sequential/dense/BiasAdd/ReadVariableOp:0dense0StatefulPartitionedCall/sequential/dense/BiasAdd"Addtf2onnx*NB@StatefulPartitionedCall/sequential/dense/MatMul/ReadVariableOp:0JÇ?@*MBAStatefulPartitionedCall/sequential/dense/BiasAdd/ReadVariableOp:0JðÏŸ@RDconverted from E:\eim_ase\mlflow_git\test_model_template\my_tf_modelZ#
+dense_input
+
+unk__6
+b
+dense
+
+unk__7
+B

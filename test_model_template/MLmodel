@@ -1,0 +1,10 @@
+artifact_path: model
+flavors:
+  onnx:
+    data: model.onnx
+    onnx_version: 1.10.1
+  python_function:
+    data: model.onnx
+    env: conda.yaml
+    loader_module: mlflow.onnx
+    python_version: 3.9.0
